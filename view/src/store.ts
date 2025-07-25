@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import type { WorkflowStore, FlowNode, FlowEdge, WorkflowGraph, ExecutionResult, ExecutionContext, BindingValidation } from './types';
+import type { WorkflowStore, FlowNode, FlowEdge, WorkflowGraph, ExecutionResult, ExecutionContext, BindingValidation, Workflow04, ToolNodeData, CodeNodeData } from './types';
 import type { Connection } from 'reactflow';
 import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import type { NodeChange, EdgeChange } from 'reactflow';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import { ExpressionEvaluator } from './lib/expressionParser';
+import { hashObject, hashCode } from './utils/hash';
 
 // Helper to generate unique IDs
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -162,10 +163,38 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   // Expression evaluator instance
   evaluator: new ExpressionEvaluator(),
   
-  setNodes: (nodes: FlowNode[]) => set({ nodes }),
-  setEdges: (edges: FlowEdge[]) => set({ edges }),
+  // Code/Canvas sync mode
+  codeMode: false,
+  codeSnapshot: undefined,
+  graphSnapshot: undefined,
+  isUnsynced: false,
   
-  addNode: (node: FlowNode) => set((state) => ({ nodes: [...state.nodes, node] })),
+  setNodes: (nodes: FlowNode[]) => {
+    set({ nodes });
+    // Check sync status when nodes change
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
+  },
+  
+  setEdges: (edges: FlowEdge[]) => {
+    set({ edges });
+    // Check sync status when edges change
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
+  },
+  
+  addNode: (node: FlowNode) => {
+    set((state) => ({ nodes: [...state.nodes, node] }));
+    // Check sync status when node is added
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
+  },
   
   updateNode: (id: string, data: any) => {
     set((state) => ({
@@ -173,6 +202,11 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
         node.id === id ? { ...node, data: { ...node.data, ...data } } : node
       ),
     }));
+    // Check sync status when node is updated
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
   },
   
   deleteNode: (id: string) => {
@@ -180,6 +214,11 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodes: state.nodes.filter((node) => node.id !== id),
       edges: state.edges.filter((edge) => edge.source !== id && edge.target !== id),
     }));
+    // Check sync status when node is deleted
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
   },
   
   setSelectedNode: (id: string | null) => set({ selectedNodeId: id }),
@@ -193,6 +232,71 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       targetHandle: connection.targetHandle || undefined,
     };
     set((state) => ({ edges: [...state.edges, newEdge] }));
+    // Check sync status when edge is added
+    const state = get();
+    if (state.codeMode) {
+      state.checkSyncStatus();
+    }
+  },
+  
+  // Code/Canvas sync operations
+  setCodeMode: (enabled: boolean) => {
+    set({ codeMode: enabled });
+    if (enabled) {
+      // Initialize snapshots when entering code mode
+      const state = get();
+      const currentGraph = state.exportWorkflow04();
+      set({
+        graphSnapshot: currentGraph,
+        isUnsynced: false
+      });
+    }
+  },
+  
+  setCodeSnapshot: (code: string) => {
+    set({ codeSnapshot: code });
+    get().checkSyncStatus();
+  },
+  
+  setGraphSnapshot: (graph: Workflow04) => {
+    set({ graphSnapshot: graph });
+    get().checkSyncStatus();
+  },
+  
+  markSynced: () => {
+    const state = get();
+    const currentGraph = state.exportWorkflow04();
+    set({
+      graphSnapshot: currentGraph,
+      isUnsynced: false
+    });
+  },
+  
+  checkSyncStatus: async () => {
+    const state = get();
+    if (!state.codeMode || !state.graphSnapshot) {
+      set({ isUnsynced: false });
+      return;
+    }
+    
+    try {
+      const currentGraph = state.exportWorkflow04();
+      const currentGraphHash = await hashObject(currentGraph);
+      const snapshotGraphHash = await hashObject(state.graphSnapshot);
+      
+      let codeChanged = false;
+      if (state.codeSnapshot) {
+        // If we have a code snapshot, we can compare it (this would be set when user edits code)
+        // For now, we'll assume code hasn't changed unless explicitly set
+        codeChanged = false;
+      }
+      
+      const graphChanged = currentGraphHash !== snapshotGraphHash;
+      set({ isUnsynced: graphChanged || codeChanged });
+    } catch (error) {
+      console.error('Failed to check sync status:', error);
+      set({ isUnsynced: false });
+    }
   },
   
   exportWorkflow: () => {
@@ -224,6 +328,85 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       }))
     };
     return workflow;
+  },
+  
+  exportWorkflow04: () => {
+    const state = get();
+    const workflow: Workflow04 = {
+      version: '0.4.0',
+      nodes: state.nodes.map(node => {
+        if (node.type === 'tool') {
+          const toolData = node.data as import('./types').ToolData;
+          return {
+            type: 'tool' as const,
+            id: node.id,
+            title: toolData.title,
+            ref: toolData.ref,
+            input: toolData.input || {}
+          } as ToolNodeData;
+        } else {
+          const codeData = node.data as import('./types').CodeData;
+          return {
+            type: 'code' as const,
+            id: node.id,
+            title: codeData.title,
+            code: codeData.code
+          } as CodeNodeData;
+        }
+      }),
+      edges: state.edges.map(edge => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        data: {}
+      }))
+    };
+    return workflow;
+  },
+  
+  importWorkflow04: (graph: Workflow04) => {
+    const nodes: FlowNode[] = graph.nodes.map((node, index) => {
+      const position = { x: index * 200, y: index * 100 }; // Simple positioning
+      
+      if (node.type === 'tool') {
+        return {
+          id: node.id,
+          type: 'tool' as const,
+          position,
+          data: {
+            kind: 'tool' as const,
+            title: node.title,
+            ref: node.ref,
+            input: node.input || {}
+          }
+        };
+      } else {
+        return {
+          id: node.id,
+          type: 'code' as const,
+          position,
+          data: {
+            kind: 'code' as const,
+            title: node.title,
+            code: node.code
+          }
+        };
+      }
+    });
+    
+    const edges: FlowEdge[] = graph.edges.map(edge => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: undefined,
+      targetHandle: undefined
+    }));
+    
+    set({
+      nodes,
+      edges,
+      selectedNodeId: null
+    });
   },
   
   importWorkflow: (graph: WorkflowGraph) => {
@@ -370,7 +553,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   }
 }));
 
-// Helper store for UI state
+// Helper store for UI state  
 interface UIStore {
   isRunModalOpen: boolean;
   setRunModalOpen: (open: boolean) => void;
@@ -383,6 +566,10 @@ interface UIStore {
   aiPrompt: string;
   setAiPrompt: (prompt: string) => void;
   generateCode: () => string;
+  
+  // Import from code modal
+  isImportModalOpen: boolean;
+  setImportModalOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({
@@ -396,5 +583,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
   
   aiPrompt: '',
   setAiPrompt: (prompt: string) => set({ aiPrompt: prompt }),
-  generateCode: () => fakeAI(get().aiPrompt)
+  generateCode: () => fakeAI(get().aiPrompt),
+  
+  // Import from code modal
+  isImportModalOpen: false,
+  setImportModalOpen: (open: boolean) => set({ isImportModalOpen: open })
 })); 

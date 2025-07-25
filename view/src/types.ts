@@ -8,6 +8,52 @@ export interface WorkflowGraph {
   edges: WorkflowEdge[];
 }
 
+// DSL v0.4 Types for Code/Canvas sync
+export interface Workflow04 {
+  version: '0.4.0';
+  nodes: Array<ToolNodeData | CodeNodeData>;
+  edges: Edge04[];
+}
+
+export interface Edge04 {
+  id: string;
+  source: string;
+  target: string;
+  data: Record<string, never>;
+}
+
+export interface ToolNodeData {
+  type: 'tool';
+  id: string;
+  title: string;
+  ref: { appId: string; toolId: string };
+  input?: Record<string, InputValue>;
+}
+
+export interface CodeNodeData {
+  type: 'code';
+  id: string;
+  title: string;
+  code: string;
+}
+
+export type InputValue = Static | Binding | Expr;
+
+export interface Static {
+  kind: 'static';
+  value: string;
+}
+
+export interface Binding {
+  kind: 'binding';
+  path: string;
+}
+
+export interface Expr {
+  kind: 'expr';
+  code: string;
+}
+
 export interface WorkflowEdge {
   id: string;
   source: string;
@@ -98,6 +144,12 @@ export interface WorkflowStore {
   executionContext: ExecutionContext;
   evaluator: ExpressionEvaluator;
   
+  // Code/Canvas sync mode
+  codeMode: boolean;
+  codeSnapshot?: string;
+  graphSnapshot?: Workflow04;
+  isUnsynced: boolean;
+  
   // Node operations
   setNodes: (nodes: FlowNode[]) => void;
   setEdges: (edges: FlowEdge[]) => void;
@@ -106,6 +158,13 @@ export interface WorkflowStore {
   deleteNode: (id: string) => void;
   setSelectedNode: (id: string | null) => void;
   onConnect: (connection: Connection) => void;
+  
+  // Code/Canvas sync operations
+  setCodeMode: (enabled: boolean) => void;
+  setCodeSnapshot: (code: string) => void;
+  setGraphSnapshot: (graph: Workflow04) => void;
+  markSynced: () => void;
+  checkSyncStatus: () => Promise<void>;
   
   // Execution
   executeNode: (id: string) => Promise<void>;
@@ -116,6 +175,8 @@ export interface WorkflowStore {
   // Import/Export
   importWorkflow: (workflow: WorkflowGraph) => void;
   exportWorkflow: () => WorkflowGraph;
+  exportWorkflow04: () => Workflow04;
+  importWorkflow04: (workflow: Workflow04) => void;
   
   // Data binding
   evaluateExpression: (expression: string, currentNodeId: string) => BindingValidation;

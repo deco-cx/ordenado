@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ordenado Workflow DSL v0.4",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.4.0"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/ToolNode"
+          },
+          {
+            "$ref": "#/definitions/CodeNode"
+          }
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Edge"
+      }
+    }
+  },
+  "required": ["version", "nodes", "edges"],
+  "definitions": {
+    "ToolNode": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "tool"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "object",
+          "properties": {
+            "appId": {
+              "type": "string"
+            },
+            "toolId": {
+              "type": "string"
+            }
+          },
+          "required": ["appId", "toolId"]
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/InputValue"
+          }
+        }
+      },
+      "required": ["type", "id", "title", "ref"]
+    },
+    "CodeNode": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "code"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "Inline TypeScript code"
+        }
+      },
+      "required": ["type", "id", "title", "code"]
+    },
+    "Edge": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "required": ["id", "source", "target", "data"]
+    },
+    "InputValue": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/StaticValue"
+        },
+        {
+          "$ref": "#/definitions/BindingValue"
+        },
+        {
+          "$ref": "#/definitions/ExpressionValue"
+        }
+      ]
+    },
+    "StaticValue": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "static"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "value"]
+    },
+    "BindingValue": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "binding"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "path"]
+    },
+    "ExpressionValue": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "expr"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "code"]
+    }
+  }
+} 

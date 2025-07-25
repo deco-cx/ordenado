@@ -4,12 +4,15 @@ import Canvas from './components/Canvas';
 import Inspector from './components/Inspector';
 import RunModal from './components/RunModal';
 import SubflowModal from './components/SubflowModal';
+import { ImportFromCodeModal } from './components/ImportFromCodeModal';
+import { TopbarModeToggle } from './components/TopbarModeToggle';
+import { CodeMode } from './components/CodeEditor';
 import { Button } from './components/ui/button';
 import { useWorkflowStore, useUIStore } from './store';
 import { Play, Download, Upload } from 'lucide-react';
 
 function App() {
-  const { exportWorkflow, importWorkflow } = useWorkflowStore();
+  const { exportWorkflow, importWorkflow, codeMode } = useWorkflowStore();
   const { setRunModalOpen } = useUIStore();
   
   const handleExport = () => {
@@ -48,11 +51,16 @@ function App() {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-medium text-slate-800">
-              Ordenado
-            </h1>
-            <span className="text-sm text-slate-500 font-normal">Visual Workflow Builder</span>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-medium text-slate-800">
+                Ordenado
+              </h1>
+              <span className="text-sm text-slate-500 font-normal">Visual Workflow Builder</span>
+            </div>
+            
+            {/* Mode Toggle */}
+            <TopbarModeToggle />
           </div>
           
           <div className="flex items-center gap-2">
@@ -74,14 +82,28 @@ function App() {
       
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        <Toolbox />
-        <Canvas />
-        <Inspector />
+        {codeMode ? (
+          // Code Mode Layout
+          <div className="flex-1 flex">
+            <div className="flex-1 p-4">
+              <CodeMode />
+            </div>
+            <Inspector />
+          </div>
+        ) : (
+          // Canvas Mode Layout  
+          <>
+            <Toolbox />
+            <Canvas />
+            <Inspector />
+          </>
+        )}
       </div>
       
       {/* Modals */}
       <RunModal />
       <SubflowModal />
+      <ImportFromCodeModal />
     </div>
   );
 }
