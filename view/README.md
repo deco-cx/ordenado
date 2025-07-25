@@ -1,6 +1,6 @@
-# FlowForge α - AI-Assisted Workflow Builder
+# Ordenado - Visual Workflow Builder
 
-A visual workflow builder that allows users to create and test workflows using drag-and-drop components, similar to Zapier but with AI assistance.
+A visual workflow builder for creating and testing automated workflows using drag-and-drop components with AI assistance and custom code execution.
 
 ## Features
 

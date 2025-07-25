@@ -96,13 +96,13 @@ const RunModal: React.FC = () => {
   const getStatusIcon = (status: RunStep['status']) => {
     switch (status) {
       case 'pending':
-        return <div className="w-4 h-4 rounded-full border-2 border-gray-300" />;
+        return <div className="w-4 h-4 rounded-full border-2 border-slate-300" />;
       case 'running':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="w-4 h-4 text-slate-600 animate-spin" />;
       case 'success':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-emerald-600" />;
       case 'error':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-rose-600" />;
     }
   };
   
@@ -110,15 +110,15 @@ const RunModal: React.FC = () => {
     <Dialog open={isRunModalOpen} onOpenChange={setRunModalOpen}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Run Workflow</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-slate-800">Run Workflow</DialogTitle>
+          <DialogDescription className="text-slate-600">
             Execute all nodes in the workflow sequentially
           </DialogDescription>
         </DialogHeader>
         
         <div className="mt-4">
           {!isRunning && steps.length === 0 && (
-            <Button onClick={handleRun} className="w-full">
+            <Button onClick={handleRun} className="w-full bg-slate-800 hover:bg-slate-900 text-white">
               <Play className="w-4 h-4 mr-2" />
               Start Workflow Execution
             </Button>
@@ -130,10 +130,10 @@ const RunModal: React.FC = () => {
                 <div
                   key={step.nodeId}
                   className={`border rounded-lg p-4 ${
-                    step.status === 'running' ? 'border-blue-300 bg-blue-50' :
-                    step.status === 'success' ? 'border-green-300 bg-green-50' :
-                    step.status === 'error' ? 'border-red-300 bg-red-50' :
-                    'border-gray-200'
+                    step.status === 'running' ? 'border-slate-300 bg-slate-50' :
+                    step.status === 'success' ? 'border-emerald-200 bg-emerald-50' :
+                    step.status === 'error' ? 'border-rose-200 bg-rose-50' :
+                    'border-slate-200 bg-white'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -142,20 +142,20 @@ const RunModal: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium">{step.title}</h4>
-                        <span className="text-xs text-gray-500">
+                        <h4 className="font-medium text-slate-800">{step.title}</h4>
+                        <span className="text-xs text-slate-500">
                           Step {index + 1} of {steps.length}
                         </span>
                       </div>
                       
                       {step.output !== undefined && step.output !== null && (
-                        <pre className="mt-2 text-xs bg-white p-2 rounded border">
+                        <pre className="mt-2 text-xs bg-white p-2 rounded border border-slate-200 text-slate-700">
                           {JSON.stringify(step.output, null, 2)}
                         </pre>
                       )}
                       
                       {step.error && (
-                        <div className="mt-2 text-sm text-red-600">
+                        <div className="mt-2 text-sm text-rose-600">
                           {step.error}
                         </div>
                       )}
@@ -166,7 +166,7 @@ const RunModal: React.FC = () => {
               
               {!isRunning && (
                 <div className="flex gap-2 mt-4">
-                  <Button onClick={handleRun} variant="outline">
+                  <Button onClick={handleRun} variant="outline" className="text-slate-600 border-slate-200 hover:bg-slate-50">
                     <Play className="w-4 h-4 mr-2" />
                     Run Again
                   </Button>
@@ -176,6 +176,7 @@ const RunModal: React.FC = () => {
                       setRunModalOpen(false);
                     }}
                     variant="outline"
+                    className="text-slate-600 border-slate-200 hover:bg-slate-50"
                   >
                     Close
                   </Button>

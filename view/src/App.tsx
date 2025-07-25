@@ -6,7 +6,7 @@ import RunModal from './components/RunModal';
 import SubflowModal from './components/SubflowModal';
 import { Button } from './components/ui/button';
 import { useWorkflowStore, useUIStore } from './store';
-import { Play, Download, Upload, FileJson } from 'lucide-react';
+import { Play, Download, Upload } from 'lucide-react';
 
 function App() {
   const { exportWorkflow, importWorkflow } = useWorkflowStore();
@@ -44,27 +44,27 @@ function App() {
   };
   
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3">
+      <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FlowForge α
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-medium text-slate-800">
+              Ordenado
             </h1>
-            <span className="text-sm text-gray-500">AI-Assisted Workflow Builder</span>
+            <span className="text-sm text-slate-500 font-normal">Visual Workflow Builder</span>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleImport}>
+            <Button variant="outline" size="sm" onClick={handleImport} className="text-slate-600 border-slate-300 hover:bg-slate-50">
               <Upload className="w-4 h-4 mr-2" />
               Import
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" onClick={handleExport} className="text-slate-600 border-slate-300 hover:bg-slate-50">
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
-            <Button size="sm" onClick={() => setRunModalOpen(true)}>
+            <Button size="sm" onClick={() => setRunModalOpen(true)} className="bg-slate-800 hover:bg-slate-900 text-white">
               <Play className="w-4 h-4 mr-2" />
               Run Workflow
             </Button>

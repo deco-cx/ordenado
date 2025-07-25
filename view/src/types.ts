@@ -1,4 +1,5 @@
 import type { Node, Edge, Connection } from 'reactflow';
+import type { ExpressionEvaluator } from './lib/expressionParser';
 
 // Workflow Schema Types (v0.2.0)
 export interface WorkflowGraph {
@@ -91,33 +92,36 @@ export type FlowEdge = Edge;
 
 // Store Types
 export interface WorkflowStore {
-  // Current workflow
   nodes: FlowNode[];
   edges: FlowEdge[];
   selectedNodeId: string | null;
+  executionContext: ExecutionContext;
+  evaluator: ExpressionEvaluator;
   
-  // Actions
+  // Node operations
   setNodes: (nodes: FlowNode[]) => void;
   setEdges: (edges: FlowEdge[]) => void;
   addNode: (node: FlowNode) => void;
-  updateNode: (id: string, data: Partial<ToolData | CodeData>) => void;
+  updateNode: (id: string, data: any) => void;
   deleteNode: (id: string) => void;
   setSelectedNode: (id: string | null) => void;
-  
-  // Connections
   onConnect: (connection: Connection) => void;
   
-  // Import/Export
-  exportWorkflow: () => WorkflowGraph;
-  importWorkflow: (graph: WorkflowGraph) => void;
-  
   // Execution
-  executeNode: (nodeId: string) => Promise<void>;
+  executeNode: (id: string) => Promise<void>;
   executeWorkflow: () => Promise<void>;
+  clearNodeCache: (id: string) => Promise<void>;
+  getNodeOutput: (id: string) => unknown;
   
-  // Cache
-  clearNodeCache: (nodeId: string) => void;
-  getNodeOutput: (nodeId: string) => unknown;
+  // Import/Export
+  importWorkflow: (workflow: WorkflowGraph) => void;
+  exportWorkflow: () => WorkflowGraph;
+  
+  // Data binding
+  evaluateExpression: (expression: string, currentNodeId: string) => BindingValidation;
+  getAvailableReferences: (currentNodeId: string) => DataReference[];
+  updateNodeInputWithBinding: (nodeId: string, field: string, expression: string) => void;
+  clearExecutionContext: () => void;
 }
 
 // Execution Types
@@ -138,4 +142,38 @@ export interface SubflowModalState {
   isOpen: boolean;
   nodeId: string | null;
   workflowGraph: WorkflowGraph | null;
+} 
+
+// Data Binding Types
+export interface ExecutionContext {
+  [nodeId: string]: {
+    nodeTitle: string;
+    output: unknown;
+    executedAt: number;
+    status: 'success' | 'error';
+    error?: string;
+  };
+}
+
+export interface DataReference {
+  nodeId: string;
+  nodeTitle: string;
+  path: string;
+  value: unknown;
+  type: string;
+}
+
+export interface Expression {
+  type: 'reference' | 'literal' | 'function' | 'accessor';
+  value: string;
+  path?: string[];
+  args?: Expression[];
+  source?: Expression;
+}
+
+export interface BindingValidation {
+  isValid: boolean;
+  error?: string;
+  resolvedValue?: unknown;
+  usedReferences?: string[];
 } 

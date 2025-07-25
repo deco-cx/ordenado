@@ -1,8 +1,10 @@
 import { create } from 'zustand';
-import type { Connection, NodeChange, EdgeChange } from 'reactflow';
-import { addEdge } from 'reactflow';
-import { set as idbSet, get as idbGet } from 'idb-keyval';
-import type { WorkflowStore, FlowNode, FlowEdge, WorkflowGraph, ExecutionResult } from './types';
+import type { WorkflowStore, FlowNode, FlowEdge, WorkflowGraph, ExecutionResult, ExecutionContext, BindingValidation } from './types';
+import type { Connection } from 'reactflow';
+import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import type { NodeChange, EdgeChange } from 'reactflow';
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+import { ExpressionEvaluator } from './lib/expressionParser';
 
 // Helper to generate unique IDs
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -37,67 +39,160 @@ console.log('Processing:', input);
 return { result: 'success' };`;
 };
 
-// Mock execution
-const mockExecute = async (nodeId: string): Promise<ExecutionResult> => {
+// Mock execution function
+async function executeNodeMock(node: FlowNode): Promise<ExecutionResult> {
   // Simulate execution delay
   await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
   
-  // Random success/failure for demo
-  const ok = Math.random() > 0.1;
-  
-  if (!ok) {
-    return {
-      ok: false,
-      timestamp: Date.now(),
-      error: 'Mock error: Connection timeout'
-    };
+  // Random success/failure
+  if (Math.random() < 0.9) {
+    // Generate different mock outputs based on node type/tool
+    let output: any = { success: true, timestamp: new Date().toISOString() };
+    
+    if (node.data.kind === 'tool') {
+      const toolData = node.data;
+      
+      // Mock outputs based on tool ID
+      if (toolData.ref.toolId === 'TEAMS_LIST') {
+        output = {
+          teams: [
+            { id: 1, name: 'Engineering', memberCount: 12 },
+            { id: 2, name: 'Product', memberCount: 8 },
+            { id: 3, name: 'Design', memberCount: 5 }
+          ]
+        };
+      } else if (toolData.ref.toolId === 'DATABASES_RUN_SQL') {
+        output = {
+          results: [
+            { id: 1, email: 'john@example.com', name: 'John Doe', role: 'admin' },
+            { id: 2, email: 'jane@example.com', name: 'Jane Smith', role: 'user' },
+            { id: 3, email: 'bob@example.com', name: 'Bob Johnson', role: 'user' }
+          ],
+          rowCount: 3
+        };
+      } else if (toolData.ref.toolId === 'AI_GENERATE') {
+        // Check if prompt contains references to teams
+        const promptValue = toolData.input?.prompt;
+        const prompt = typeof promptValue === 'string' ? promptValue : '';
+        if (prompt.includes('team') || prompt.includes('Team')) {
+          output = {
+            text: "Based on the teams data: Engineering has 12 members, Product has 8 members, and Design has 5 members. The total workforce is 25 people across 3 teams.",
+            model: 'gpt-4',
+            usage: { promptTokens: 50, completionTokens: 35 }
+          };
+        } else {
+          output = {
+            text: `Generated response for: ${prompt.substring(0, 50)}...`,
+            model: 'gpt-4',
+            usage: { promptTokens: 20, completionTokens: 30 }
+          };
+        }
+      } else if (toolData.ref.toolId === 'AIRTABLE_LIST_RECORDS') {
+        output = {
+          records: [
+            { 
+              id: 'rec1', 
+              fields: { 
+                Title: 'Q4 Planning', 
+                Status: 'In Progress',
+                AssignedTo: 'john@example.com',
+                DueDate: '2024-12-31'
+              } 
+            },
+            { 
+              id: 'rec2', 
+              fields: { 
+                Title: 'Design Review', 
+                Status: 'Pending',
+                AssignedTo: 'jane@example.com',
+                DueDate: '2024-12-15'
+              } 
+            }
+          ]
+        };
+      } else {
+        // Generic mock output
+        output = {
+          result: `Processed ${JSON.stringify(toolData.input).length} characters of input`,
+          processedAt: new Date().toISOString()
+        };
+      }
+    } else {
+      // Code node - mock execution
+      output = {
+        result: 'Code executed successfully',
+        returnValue: { computed: Math.random() * 100 }
+      };
+    }
+    
+    return output;
+  } else {
+    throw new Error('Mock execution failed');
   }
+}
+
+// Helper to resolve input values with data binding
+function resolveInputValues(
+  input: Record<string, any>,
+  evaluator: ExpressionEvaluator,
+  context: ExecutionContext,
+  nodeId: string
+): Record<string, any> {
+  const resolved: Record<string, any> = {};
   
-  // Generate mock output based on node type
-  const mockOutputs = [
-    { data: Array(5).fill(null).map((_, i) => ({ id: i, name: `Item ${i}` })) },
-    { text: 'Generated response from AI model', tokens: 127 },
-    { rows: [{ id: 1, value: 'test' }], rowCount: 1 },
-    { success: true, message: 'Operation completed' }
-  ];
+  Object.entries(input).forEach(([key, value]) => {
+    if (typeof value === 'string' && evaluator.containsReferences(value)) {
+      // Try to interpolate the value
+      const interpolated = evaluator.interpolate(value, context, nodeId);
+      resolved[key] = interpolated;
+    } else {
+      resolved[key] = value;
+    }
+  });
   
-  return {
-    ok: true,
-    timestamp: Date.now(),
-    output: mockOutputs[Math.floor(Math.random() * mockOutputs.length)]
-  };
-};
+  return resolved;
+}
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  executionContext: {},
+  
+  // Expression evaluator instance
+  evaluator: new ExpressionEvaluator(),
   
   setNodes: (nodes: FlowNode[]) => set({ nodes }),
   setEdges: (edges: FlowEdge[]) => set({ edges }),
   
   addNode: (node: FlowNode) => set((state) => ({ nodes: [...state.nodes, node] })),
   
-  updateNode: (id: string, data: any) => set((state) => ({
-    nodes: state.nodes.map(node => 
-      node.id === id 
-        ? { ...node, data: { ...node.data, ...data } }
-        : node
-    )
-  })),
+  updateNode: (id: string, data: any) => {
+    set((state) => ({
+      nodes: state.nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, ...data } } : node
+      ),
+    }));
+  },
   
-  deleteNode: (id: string) => set((state) => ({
-    nodes: state.nodes.filter(n => n.id !== id),
-    edges: state.edges.filter(e => e.source !== id && e.target !== id),
-    selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId
-  })),
+  deleteNode: (id: string) => {
+    set((state) => ({
+      nodes: state.nodes.filter((node) => node.id !== id),
+      edges: state.edges.filter((edge) => edge.source !== id && edge.target !== id),
+    }));
+  },
   
   setSelectedNode: (id: string | null) => set({ selectedNodeId: id }),
   
   onConnect: (connection: Connection) => {
-    set((state) => ({
-      edges: addEdge({ ...connection, id: generateId(), data: {} }, state.edges)
-    }));
+    const newEdge: FlowEdge = {
+      id: `${connection.source}-${connection.target}`,
+      source: connection.source!,
+      target: connection.target!,
+      sourceHandle: connection.sourceHandle || undefined,
+      targetHandle: connection.targetHandle || undefined,
+    };
+    set((state) => ({ edges: [...state.edges, newEdge] }));
   },
   
   exportWorkflow: () => {
@@ -143,75 +238,135 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     });
   },
   
-  executeNode: async (nodeId: string) => {
-    const node = get().nodes.find(n => n.id === nodeId);
+  executeNode: async (id: string) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === id);
     if (!node) return;
     
-    const result = await mockExecute(nodeId);
-    
-    if (result.ok) {
-      // Cache the output
-      await idbSet(`node-output-${nodeId}`, result.output);
+    try {
+      // Resolve input values with data binding
+      let nodeToExecute = node;
+      if (node.data.kind === 'tool' && node.data.input) {
+        const resolvedInput = resolveInputValues(
+          node.data.input,
+          state.evaluator,
+          state.executionContext,
+          id
+        );
+        nodeToExecute = {
+          ...node,
+          data: {
+            ...node.data,
+            input: resolvedInput
+          }
+        };
+      }
       
-      // Update node with cached output
+      const result = await executeNodeMock(nodeToExecute);
+      
+      // Update node with output
       set((state) => ({
-        nodes: state.nodes.map(n => 
-          n.id === nodeId
-            ? { ...n, data: { ...n.data, outputCache: result.output } }
-            : n
-        )
+        nodes: state.nodes.map((n) =>
+          n.id === id ? { ...n, data: { ...n.data, outputCache: result } } : n
+        ),
       }));
+      
+      // Update execution context
+      set((state) => ({
+        executionContext: {
+          ...state.executionContext,
+          [id]: {
+            nodeTitle: node.data.title,
+            output: result,
+            executedAt: Date.now(),
+            status: 'success'
+          }
+        }
+      }));
+      
+      // Cache result
+      await idbSet(`node-output-${id}`, result);
+    } catch (error) {
+      // Update execution context with error
+      set((state) => ({
+        executionContext: {
+          ...state.executionContext,
+          [id]: {
+            nodeTitle: node.data.title,
+            output: null,
+            executedAt: Date.now(),
+            status: 'error',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      }));
+      console.error('Node execution failed:', error);
     }
   },
   
   executeWorkflow: async () => {
-    const { nodes, edges } = get();
-    
-    // Simple topological sort for linear execution
-    const nodeMap = new Map(nodes.map(n => [n.id, n]));
-    const inDegree = new Map(nodes.map(n => [n.id, 0]));
-    
-    edges.forEach(edge => {
-      inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
-    });
-    
-    const queue = nodes.filter(n => inDegree.get(n.id) === 0).map(n => n.id);
-    const sorted: string[] = [];
-    
-    while (queue.length > 0) {
-      const nodeId = queue.shift()!;
-      sorted.push(nodeId);
-      
-      edges.filter(e => e.source === nodeId).forEach(edge => {
-        const targetDegree = (inDegree.get(edge.target) || 0) - 1;
-        inDegree.set(edge.target, targetDegree);
-        if (targetDegree === 0) {
-          queue.push(edge.target);
-        }
-      });
-    }
-    
-    // Execute nodes in order
-    for (const nodeId of sorted) {
-      await get().executeNode(nodeId);
-    }
+    // TODO: Implement workflow execution with topological sort
   },
   
-  clearNodeCache: async (nodeId: string) => {
-    await idbSet(`node-output-${nodeId}`, null);
-    
+  clearNodeCache: async (id: string) => {
     set((state) => ({
-      nodes: state.nodes.map(n => 
+      nodes: state.nodes.map((n) =>
+        n.id === id ? { ...n, data: { ...n.data, outputCache: undefined } } : n
+      ),
+    }));
+    await idbDel(`node-output-${id}`);
+    
+    // Remove from execution context
+    set((state) => {
+      const newContext = { ...state.executionContext };
+      delete newContext[id];
+      return { executionContext: newContext };
+    });
+  },
+  
+  getNodeOutput: (id: string) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === id);
+    return node?.data.outputCache;
+  },
+  
+  // Data binding methods
+  evaluateExpression: (expression: string, currentNodeId: string): BindingValidation => {
+    const state = get();
+    return state.evaluator.evaluate(expression, state.executionContext, currentNodeId);
+  },
+  
+  getAvailableReferences: (currentNodeId: string) => {
+    const state = get();
+    return state.evaluator.getAvailableReferences(state.executionContext, currentNodeId);
+  },
+  
+  updateNodeInputWithBinding: (nodeId: string, field: string, expression: string) => {
+    const state = get();
+    const node = state.nodes.find((n) => n.id === nodeId);
+    if (!node || node.data.kind !== 'tool') return;
+    
+    const currentInput = node.data.input || {};
+    set((state) => ({
+      nodes: state.nodes.map((n) =>
         n.id === nodeId
-          ? { ...n, data: { ...n.data, outputCache: undefined } }
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                input: {
+                  ...currentInput,
+                  [field]: expression
+                }
+              }
+            }
           : n
-      )
+      ),
     }));
   },
   
-  getNodeOutput: (nodeId: string) => {
-    const node = get().nodes.find(n => n.id === nodeId);
-    return node?.data.outputCache;
+  clearExecutionContext: () => {
+    set({ executionContext: {} });
   }
 }));
 
