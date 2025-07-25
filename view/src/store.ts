@@ -155,7 +155,58 @@ function resolveInputValues(
 }
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
-  nodes: [],
+  nodes: [
+    // Nodes de exemplo para testar a seleção
+    {
+      id: '1',
+      type: 'tool',
+      position: { x: 100, y: 100 },
+      selectable: true,
+      data: {
+        kind: 'tool',
+        title: 'List Teams',
+        ref: {
+          appId: 'linear',
+          toolId: 'TEAMS_LIST'
+        },
+        input: {}
+      }
+    },
+    {
+      id: '2',
+      type: 'tool',
+      position: { x: 400, y: 100 },
+      selectable: true,
+      data: {
+        kind: 'tool',
+        title: 'Run SQL Query',
+        ref: {
+          appId: 'databases',
+          toolId: 'DATABASES_RUN_SQL'
+        },
+        input: {
+          sql: 'SELECT * FROM users'
+        }
+      }
+    },
+    {
+      id: '3',
+      type: 'tool',
+      position: { x: 250, y: 250 },
+      selectable: true,
+      data: {
+        kind: 'tool',
+        title: 'Generate Text',
+        ref: {
+          appId: 'ai',
+          toolId: 'AI_GENERATE'
+        },
+        input: {
+          prompt: 'Summarize the team data'
+        }
+      }
+    }
+  ] as FlowNode[],
   edges: [],
   selectedNodeId: null,
   executionContext: {},
@@ -570,6 +621,18 @@ interface UIStore {
   // Import from code modal
   isImportModalOpen: boolean;
   setImportModalOpen: (open: boolean) => void;
+  
+  // Multi-selection and Agent Chat
+  selectedNodeIds: Set<string>;
+  toggleNodeSelection: (nodeId: string) => void;
+  selectNodes: (nodeIds: string[]) => void;
+  clearSelection: () => void;
+  
+  // Agent Chat Modal
+  isAgentChatOpen: boolean;
+  agentMode: 'edit' | 'agent' | null;
+  openAgentChat: (mode: 'edit' | 'agent') => void;
+  closeAgentChat: () => void;
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({
@@ -587,5 +650,25 @@ export const useUIStore = create<UIStore>((set, get) => ({
   
   // Import from code modal
   isImportModalOpen: false,
-  setImportModalOpen: (open: boolean) => set({ isImportModalOpen: open })
+  setImportModalOpen: (open: boolean) => set({ isImportModalOpen: open }),
+  
+  // Multi-selection and Agent Chat
+  selectedNodeIds: new Set<string>(),
+  toggleNodeSelection: (nodeId: string) => set((state) => {
+    const newSet = new Set(state.selectedNodeIds);
+    if (newSet.has(nodeId)) {
+      newSet.delete(nodeId);
+    } else {
+      newSet.add(nodeId);
+    }
+    return { selectedNodeIds: newSet };
+  }),
+  selectNodes: (nodeIds: string[]) => set({ selectedNodeIds: new Set(nodeIds) }),
+  clearSelection: () => set({ selectedNodeIds: new Set() }),
+  
+  // Agent Chat Modal
+  isAgentChatOpen: false,
+  agentMode: null,
+  openAgentChat: (mode: 'edit' | 'agent') => set({ isAgentChatOpen: true, agentMode: mode }),
+  closeAgentChat: () => set({ isAgentChatOpen: false, agentMode: null })
 })); 

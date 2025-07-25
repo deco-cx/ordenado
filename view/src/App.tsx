@@ -5,6 +5,7 @@ import Inspector from './components/Inspector';
 import RunModal from './components/RunModal';
 import SubflowModal from './components/SubflowModal';
 import { ImportFromCodeModal } from './components/ImportFromCodeModal';
+import AgentChatModal from './components/AgentChatModal';
 import { TopbarModeToggle } from './components/TopbarModeToggle';
 import { CodeMode } from './components/CodeEditor';
 import { Button } from './components/ui/button';
@@ -56,7 +57,7 @@ function App() {
               <h1 className="text-xl font-medium text-slate-800">
                 Ordenado
               </h1>
-              <span className="text-sm text-slate-500 font-normal">Visual Workflow Builder</span>
+              <span className="text-sm text-slate-500 font-normal">Visual s Builder</span>
             </div>
             
             {/* Mode Toggle */}
@@ -104,6 +105,7 @@ function App() {
       <RunModal />
       <SubflowModal />
       <ImportFromCodeModal />
+      <AgentChatModal />
     </div>
   );
 }

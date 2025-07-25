@@ -136,3 +136,97 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom animations */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.delay-100 {
+  animation-delay: 0.16s;
+}
+
+.delay-200 {
+  animation-delay: 0.32s;
+}
+
+/* ReactFlow selection box styling */
+.react-flow__selection,
+.react-flow__selectionpane {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border: 2px solid rgb(59, 130, 246) !important;
+  border-radius: 4px;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+
+/* Make selection work properly */
+.selection-mode .react-flow__selectionpane {
+  display: block !important;
+}
+
+.pan-mode .react-flow__selectionpane {
+  display: none !important;
+}
+
+/* Make sure checkboxes are always on top */
+.react-flow__node {
+  z-index: 1 !important;
+}
+
+/* Ensure checkbox interaction */
+.react-flow__node-tool,
+.react-flow__node-code {
+  cursor: move;
+}
+
+/* Override ReactFlow's default selection styles */
+.react-flow__node.selected {
+  /* Keep the custom styling from our components */
+}
+
+/* Cursor styles for different modes */
+.selection-mode .react-flow__renderer,
+.selection-mode .react-flow__pane,
+.selection-mode .react-flow__viewport,
+.selection-mode .react-flow__container {
+  cursor: crosshair !important;
+}
+
+.selection-mode .react-flow__node {
+  cursor: pointer !important;
+}
+
+.selection-mode .react-flow__node-tool,
+.selection-mode .react-flow__node-code {
+  cursor: pointer !important;
+}
+
+.pan-mode .react-flow__renderer,
+.pan-mode .react-flow__pane,
+.pan-mode .react-flow__viewport,
+.pan-mode .react-flow__container {
+  cursor: grab !important;
+}
+
+.pan-mode .react-flow__pane:active,
+.pan-mode .react-flow__viewport:active {
+  cursor: grabbing !important;
+}
+
+/* Ensure selection box is always visible when dragging */
+.react-flow__selectionrect {
+  fill: rgba(59, 130, 246, 0.08) !important;
+  stroke: rgb(59, 130, 246) !important;
+  stroke-width: 2px !important;
+}
