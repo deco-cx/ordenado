@@ -3846,3 +3846,395 @@ The app provides a complete visual workflow builder experience similar to Zapier
 
 ---
 
+_**User**_
+
+Please, based on the initial prompt, create a good readme for this app. Mention it's still a concept work-in-progress application and it looking for help or criticism.
+
+---
+
+_**Assistant**_
+
+<think><details><summary>Thought Process</summary>
+**Revising Documentation**
+
+I'm currently working on the `README.md` file for the `FlowForge α` application. My primary focus is on ensuring the documentation accurately reflects the application's functionality and setup. I've identified the need to clearly outline the initial setup instructions and core features.
+
+
+**Generating Initial Content**
+
+I'm now focused on the initial content for the new `README.md`. It's clear I need to convey the application's "concept" status, and also highlight its "work-in-progress" nature, and the need for feedback. The `plan.md` file is proving useful, especially the "TL;DR" section for providing context and the app's basic functionality.
+
+
+</details></think>
+
+---
+
+_**User**_
+
+Please, based on the initial prompt, create a good readme for this app. Mention it's still a concept work-in-progress application and it looking for help or criticism.
+
+The name of the app will be Ordenado
+
+---
+
+_**Assistant**_
+
+<think><details><summary>Thought Process</summary>The user wants me to create a README for the app based on the initial prompt. Let me look at the initial prompt to understand what this app is about:
+
+From the plan.md file and the context, this is FlowForge α - an AI-assisted visual workflow builder. But the user now says the name of the app will be "Ordenado". Let me create a comprehensive README that:
+
+1. Explains what Ordenado is - a visual workflow builder
+2. Mentions it's a concept/work-in-progress
+3. Asks for help and criticism
+4. Explains the key features
+5. Shows how to run it
+6. Explains the technical architecture
+7. Shows what's implemented vs what's planned
+
+I should put this in the root README.md file since that's what shows up on GitHub.</details></think>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+Create a comprehensive README for Ordenado based on the initial prompt and current implementation
+
+**Chunk 1**
+Lines added: 186, lines removed: 79
+
+```diff
+@@ -1,90 +1,197 @@
+- # React + Tailwind MCP Server Template
+- 
+- A full-stack template for building
+- [Model Context Protocol (MCP)](https://spec.modelcontextprotocol.io/) servers
+- with a modern React frontend. This template provides a complete development
+- environment where your MCP server not only exposes tools and workflows to AI
+- agents but also serves a beautiful web interface built with React and Tailwind
+- CSS.
+- 
+- ## ✨ Features
+- 
+- - **🤖 MCP Server**: Cloudflare Workers-based server with typed tools and
+-   workflows
+- - **⚛️ React Frontend**: Modern React app with Vite, TanStack Router, and
+-   Tailwind CSS
+- - **🎨 UI Components**: Pre-configured shadcn/ui components for rapid
+-   development
+- - **🔧 Type Safety**: Full TypeScript support with auto-generated RPC client
+-   types
+- - **🚀 Hot Reload**: Live development with automatic rebuilding for both
+-   frontend and backend
+- - **☁️ Ready to Deploy**: One-command deployment to Cloudflare Workers
+- 
+- ## 🚀 Quick Start
+- 
+- ### Prerequisites
+- 
+- - Node.js ≥18.0.0
+- - Deno ≥2.0.0
+- - [Deco CLI](https://deco.chat): `deno install -Ar -g -n deco jsr:@deco/cli`
+- 
+- ### Setup
++ # 🎯 Ordenado - AI-Assisted Visual Workflow Builder
++ 
++ > **⚠️ Work in Progress** - This is a concept application exploring the future of visual workflow automation. We're actively seeking feedback, contributions, and criticism to improve the design and implementation.
++ 
++ ## 🌟 Vision
++ 
++ Ordenado aims to revolutionize how we create and manage automated workflows by combining the visual simplicity of tools like Zapier with the power of AI-assisted development and custom code execution. 
++ 
++ Instead of being limited to predefined integrations, Ordenado lets you:
++ - **Drag & drop** tools from your installed apps and integrations
++ - **Write custom TypeScript** for complex logic, loops, and parallel processing
++ - **Use AI assistance** to generate glue code between workflow steps
++ - **Debug step-by-step** with cached outputs and visual execution tracking
++ - **Edit sub-workflows** when a tool references another workflow
++ 
++ ## 🚀 Current Status
++ 
++ **What's Working:**
++ - ✅ Visual workflow editor with ReactFlow
++ - ✅ Drag & drop tool library (AI Models, Database, HTTP, Email, Files)
++ - ✅ Two node types: Tool Nodes and Code Nodes
++ - ✅ AI code generation (mocked with smart templates)
++ - ✅ Individual node execution with output caching
++ - ✅ Full workflow execution with topological sorting
++ - ✅ Import/Export workflows as JSON (DSL v0.2.0)
++ - ✅ Real-time debugging interface
++ - ✅ Sub-workflow editing modal (UI ready)
++ 
++ **What's Planned:**
++ - 🔄 Real backend integration for tool execution
++ - 🔄 Advanced AI integration for smarter code generation
++ - 🔄 Live workspace integration with deco.chat platform
++ - 🔄 Branching and conditional workflow paths
++ - 🔄 Scheduled workflow execution
++ - 🔄 Collaboration features
++ - 🔄 Custom UI components for workflow inputs/outputs
++ 
++ ## 🎮 Try It Now
+  
+  ```bash
++ # Clone the repository
++ git clone <your-repo-url>
++ cd ordenado
++ 
+  # Install dependencies
+  npm install
+  
+- # Configure your app
+- npm run configure
+- 
+- # Start development server
++ # Start development servers
+  npm run dev
+  ```
+  
+- The server will start on `http://localhost:8787` serving both your MCP endpoints
+- and the React frontend.
+- 
+- ## 📁 Project Structure
+- 
+- ```
+- ├── server/           # MCP Server (Cloudflare Workers + Deco runtime)
+- │   ├── main.ts      # Server entry point with tools & workflows
+- │   └── deco.gen.ts  # Auto-generated integration types
+- └── view/            # React Frontend (Vite + Tailwind CSS)
+-     ├── src/
+-     │   ├── lib/rpc.ts    # Typed RPC client for server communication
+-     │   ├── routes/       # TanStack Router routes
+-     │   └── components/   # UI components with Tailwind CSS
+-     └── package.json
++ Visit `http://localhost:4002/` to start building workflows!
++ 
++ ## 💡 Core Concepts
++ 
++ ### Two Node Types
++ 
++ **🔧 Tool Nodes**
++ - Wrap installed app tools (AI models, databases, APIs, etc.)
++ - Reference sub-workflows for modular design
++ - Configure inputs through dynamic forms based on tool schemas
++ 
++ **💻 Code Nodes**  
++ - Write custom TypeScript for any logic not covered by tools
++ - Handle iterations, conditionals, data transformations
++ - AI-assisted code generation from natural language prompts
++ - Full access to previous node outputs
++ 
++ ### Execution Model
++ 
++ 1. **Linear Flow**: Nodes connect in a directed acyclic graph (DAG)
++ 2. **Topological Execution**: Automatic dependency resolution
++ 3. **Output Caching**: Each node's output is cached for debugging
++ 4. **Step-by-Step Debugging**: Run individual nodes or full workflows
++ 5. **Error Handling**: Visual feedback for failed executions
++ 
++ ### Workflow DSL
++ 
++ Workflows are stored as JSON following a strict schema (v0.2.0):
++ 
++ ```json
++ {
++   "version": "0.2.0",
++   "nodes": [
++     {
++       "id": "node-1",
++       "type": "tool",
++       "position": { "x": 100, "y": 100 },
++       "data": {
++         "kind": "tool",
++         "title": "Generate Text",
++         "ref": { "appId": "ai-models", "toolId": "generate-text" },
++         "input": { "prompt": "Hello world" }
++       }
++     }
++   ],
++   "edges": [...]
++ }
++ ```
++ 
++ ## 🏗️ Architecture
++ 
++ ### Frontend (`/view`)
++ - **React 18** + TypeScript for the UI
++ - **ReactFlow v11** for the visual workflow editor  
++ - **Tailwind CSS** + shadcn/ui for beautiful, accessible components
++ - **Zustand** for state management
++ - **Monaco Editor** for code editing
++ - **idb-keyval** for client-side output caching
++ 
++ ### Backend (`/server`) 
++ - **Cloudflare Workers** + Deco runtime for tool execution
++ - **MCP (Model Context Protocol)** compatible tool definitions
++ - Integration with deco.chat workspace for live tool access
++ 
++ ### Key Files
++ ```
++ ordenado/
++ ├── view/src/
++ │   ├── components/
++ │   │   ├── Toolbox.tsx      # Drag & drop tool library
++ │   │   ├── Canvas.tsx       # ReactFlow workflow editor
++ │   │   ├── Inspector.tsx    # Node configuration panel
++ │   │   └── RunModal.tsx     # Workflow execution interface
++ │   ├── store.ts             # Zustand state management
++ │   ├── types.ts             # TypeScript type definitions
++ │   └── data/
++ │       └── installedApps.ts # Mock tool library
++ └── server/
++     └── main.ts              # Cloudflare Worker entry point
+  ```
+  
+- ## 🛠️ Development Workflow
+- 
+- - **`npm run dev`** - Start development with hot reload
+- - **`npm run gen`** - Generate types for external integrations
+- - **`npm run gen:self`** - Generate types for your own tools/workflows
+- - **`npm run deploy`** - Deploy to production
+- 
+- ## 🔗 Frontend ↔ Server Communication
+- 
+- The template includes a fully-typed RPC client that connects your React frontend
+- to your MCP server:
+- 
+- ```typescript
+- // Typed calls to your server tools and workflows
+- const result = await client.tools.MY_TOOL({ input: "data" });
+- const workflowResult = await client.workflows.MY_WORKFLOW({ input: "data" });
+- ```
+- 
+- ## 📖 Learn More
+- 
+- This template is built for deploying primarily on top of the
+- [Deco platform](https://deco.chat/about) which can be found at the
+- [deco-cx/chat](https://github.com/deco-cx/chat) repository.
+- 
+- ---
+- 
+- **Ready to build your next MCP server with a beautiful frontend?
+- [Get started now!](https://deco.chat)**
++ ## 🎯 Design Philosophy
++ 
++ ### 1. **Code-First Control Flow**
++ Unlike traditional workflow builders that try to provide visual control structures, Ordenado embraces the power of code. All loops, conditions, and parallel processing happen in Code Nodes using familiar TypeScript syntax.
++ 
++ ### 2. **AI as a Development Assistant**
++ AI doesn't replace developers—it assists them. Generate boilerplate, suggest transformations, but always with human oversight and approval.
++ 
++ ### 3. **Zapier-like Debugging Experience**
++ Every step shows exactly what data flowed through it. Manual execution, cached outputs, and step-by-step debugging make workflows transparent and debuggable.
++ 
++ ### 4. **Modular Sub-workflows**
++ Complex workflows can reference other workflows as tools, creating a composable architecture where common patterns can be shared and reused.
++ 
++ ## 🤝 We Need Your Help!
++ 
++ This is an experimental project exploring what's possible when we combine visual workflow builders with modern development practices. We'd love your:
++ 
++ ### 🎨 **Design Feedback**
++ - Is the visual metaphor intuitive?
++ - What workflow patterns are missing?
++ - How can we improve the debugging experience?
++ 
++ ### 🔧 **Technical Contributions**
++ - Real backend integrations
++ - Advanced AI code generation
++ - Performance optimizations
++ - Testing infrastructure
++ 
++ ### 💭 **Conceptual Input**
++ - What makes workflows hard to build and maintain?
++ - How do you currently handle complex automation?
++ - What would make you switch from your current tools?
++ 
++ ### 🐛 **Bug Reports & Feature Requests**
++ Found something broken? Have an idea? Open an issue!
++ 
++ ## 📝 Current Limitations
++ 
++ This is a **concept implementation** with several limitations:
++ 
++ - **Mock Execution**: All tool execution is simulated
++ - **No Persistence**: Workflows only exist in browser memory
++ - **Limited Tool Library**: Small set of predefined tools
++ - **No Authentication**: No user accounts or permissions
++ - **Client-Side Only**: No real backend integration yet
++ 
++ ## 🚀 Getting Involved
++ 
++ 1. **Try it**: Build a workflow and tell us what's confusing
++ 2. **Fork it**: Make improvements and send pull requests  
++ 3. **Break it**: Find edge cases and report bugs
++ 4. **Extend it**: Add new tools, features, or integrations
++ 5. **Critique it**: Tell us what we're doing wrong
++ 
++ ## 📄 License
++ 
++ [Add your license here]
++ 
++ ---
++ 
++ **Built with ❤️ for the future of workflow automation**
++ 
++ *Have feedback? Questions? Ideas? Open an issue or start a discussion!*
+  
+```
+
+</details>
+
+---
+
+<think><details><summary>Thought Process</summary>I've created a comprehensive README for Ordenado that captures the vision and current state of the application. The README includes:
+
+1. **Clear positioning** as a work-in-progress concept seeking feedback
+2. **Vision statement** explaining what makes Ordenado different from existing tools
+3. **Current status** with checkmarks for implemented features and roadmap items
+4. **Core concepts** explaining the two node types and execution model
+5. **Architecture overview** showing the tech stack and key files
+6. **Design philosophy** explaining the code-first approach and AI assistance
+7. **Call for help** with specific areas where feedback is needed
+8. **Current limitations** being transparent about what's mock vs real
+9. **Getting involved** section encouraging contribution
+
+The README positions this as an experimental project exploring new paradigms in workflow automation, which aligns with the original vision of combining visual workflow building with AI assistance and custom code execution.
+
+I should also update the view/README.md to be more specific to the frontend component.</details></think>
+
+---
+
+I've created a comprehensive README for Ordenado that positions it as an innovative concept application exploring the future of visual workflow automation. The README:
+
+## Key Highlights:
+
+**🎯 Positions as Work-in-Progress**: Clearly states this is a concept application actively seeking feedback and criticism
+
+**🌟 Explains the Vision**: Shows how Ordenado differs from traditional tools like Zapier by combining:
+- Visual drag & drop simplicity
+- AI-assisted code generation 
+- Custom TypeScript execution
+- Step-by-step debugging
+
+**✅ Current Status**: Transparently shows what's working vs. what's planned, helping contributors understand where to focus
+
+**💡 Core Concepts**: Explains the two-node architecture (Tool Nodes + Code Nodes) and execution model
+
+**🏗️ Technical Architecture**: Details the React + ReactFlow frontend and Cloudflare Workers backend
+
+**🎯 Design Philosophy**: Explains key decisions like "code-first control flow" and "AI as assistant, not replacement"
+
+**🤝 Call for Help**: Specific asks for:
+- Design feedback on user experience
+- Technical contributions 
+- Conceptual input on workflow automation
+- Bug reports and feature requests
+
+**📝 Honest Limitations**: Lists current mock implementations and missing features
+
+The README invites engagement at multiple levels - from trying the app and providing UX feedback to contributing code or discussing the conceptual approach to workflow automation.
+
+This should help attract the right kind of contributors and feedback to evolve Ordenado from concept to production-ready tool!
+
+---
+
