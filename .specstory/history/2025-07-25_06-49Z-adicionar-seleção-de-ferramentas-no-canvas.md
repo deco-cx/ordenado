@@ -3388,3 +3388,15 @@ A seleção por retângulo agora funciona exatamente como no Finder! 🚀
 
 ---
 
+_**User**_
+
+Ajuste a formatacao do readme desse repo
+
+---
+
+_**Assistant**_
+
+
+
+---
+
