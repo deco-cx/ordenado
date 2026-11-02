@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@deco/workers-runtime": "npm:@jsr/deco__workers-runtime@^0.6.0",
-    "zod": "^3.24.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@deco/cli": "npm:@jsr/deco__cli@^0.7.5",
